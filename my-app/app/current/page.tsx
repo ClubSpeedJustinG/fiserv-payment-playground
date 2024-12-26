@@ -1,9 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
-import crypto from "crypto";
+import { useState } from "react";
 
 // First, define the type for the form data
 type FormData = {
+  hash: string;
   chargetotal: number;
   hash_algorithm: string;
   responseFailURL: string;
@@ -34,26 +34,9 @@ export default function Home() {
     return `${now.getFullYear()}:${month}:${day}-${hours}:${minutes}:${seconds}`;
   };
 
-  // Function to generate the SHA-256 hash
-  const generateHash = (
-    storeId: string,
-    dateTime: string,
-    amount: string,
-    secret: string
-  ) => {
-    let storeHash = "";
-    storeHash += storeId;
-    storeHash += dateTime;
-    storeHash += amount;
-    storeHash += "840";
-    storeHash += secret;
-
-    const buf = Buffer.from(storeHash, "ascii").toString("hex");
-    return crypto.createHash("sha256").update(buf).digest("hex").toLowerCase();
-  };
-
   const initialFormState: FormData = {
-    chargetotal: 1.0,
+    hash: "c0ffca17962ee946f16271f1c7d2c9699a4bd11952cf05263d83a90876ea0adf",
+    chargetotal: 25,
     hash_algorithm: "SHA256",
     responseFailURL: "https://fiserv-payment-playground.vercel.app/fail",
     responseSuccessURL: "https://fiserv-payment-playground.vercel.app/success",
@@ -70,21 +53,9 @@ export default function Home() {
   };
 
   const [formData, setFormData] = useState(initialFormState);
-  const [currentHash, setCurrentHash] = useState("");
 
   // Secret key (kept securely within the code for simulation)
-  const secretKey = "k8>'QRb9gV";
-
-  useEffect(() => {
-    // Generate hash on mount with initial form data
-    const initialHash = generateHash(
-      String(formData.storename),
-      formData.txndatetime,
-      String(formData.chargetotal),
-      secretKey
-    );
-    setCurrentHash(initialHash);
-  }, [formData.storename, formData.txndatetime, formData.chargetotal]);
+  //const secretKey = "k8>'QRb9gV";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -117,18 +88,14 @@ export default function Home() {
 
     // Update form data and regenerate hash
     setFormData(newFormData);
-
-    const newHash = generateHash(
-      String(newFormData.storename),
-      newFormData.txndatetime,
-      String(newFormData.chargetotal),
-      secretKey
-    );
-    setCurrentHash(newHash);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Set the hardcoded hash right before submission
+    const submissionHash =
+      "c0ffca17962ee946f16271f1c7d2c9699a4bd11952cf05263d83a90876ea0adf";
 
     // Create a form and simulate submission
     const form = document.createElement("form");
@@ -136,8 +103,8 @@ export default function Home() {
     form.action = "https://www3.ipg-online.com/connect/gateway/processing";
     form.target = "_blank";
 
-    // Add all fields to the form
-    Object.entries({ ...formData, hash: currentHash }).forEach(
+    // Add all fields to the form, using the hardcoded hash
+    Object.entries({ ...formData, hash: submissionHash }).forEach(
       ([key, value]) => {
         const input = document.createElement("input");
         input.type = "hidden";
@@ -163,26 +130,6 @@ export default function Home() {
     form.submit();
     document.body.removeChild(form);
   };
-
-  const hashInfoBox = (
-    <div className="mt-6 p-4 bg-slate-800/50 rounded-lg border border-emerald-500/20">
-      <h3 className="text-lg font-medium text-emerald-400 mb-3">
-        Security Hash (Simulated)
-      </h3>
-      <div className="text-sm text-slate-300 space-y-3">
-        <p>The following hash is dynamically generated for the simulation:</p>
-        <code className="block p-2 bg-slate-900 rounded text-emerald-300">
-          {currentHash}
-        </code>
-        <p className="text-xs text-slate-500">
-          Formula:{" "}
-          <code className="font-mono">
-            storename + txndatetime + chargetotal + currency + secret
-          </code>
-        </p>
-      </div>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white p-8">
@@ -381,8 +328,16 @@ export default function Home() {
                 />
               </div>
             </div>
-
-            {hashInfoBox}
+            <div>
+              <label className="block text-sm text-slate-400 mb-2">Hash</label>
+              <input
+                type="text"
+                name="hash"
+                value={formData.hash}
+                disabled
+                className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+              />
+            </div>
 
             <div className="mt-6 flex gap-4">
               <button
