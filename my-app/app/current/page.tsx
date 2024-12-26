@@ -58,24 +58,15 @@ export default function Home() {
     amount: string,
     secret: string
   ) => {
-    // Create the exact string without any manipulation
-    const storeHash = `${storeId}${dateTime}${amount}840${secret}`;
+    let storeHash = "";
+    storeHash += storeId;
+    storeHash += dateTime;
+    storeHash += amount;
+    storeHash += "840";
+    storeHash += secret;
 
-    // Debug logging
-    console.log({
-      rawString: storeHash,
-      storeId,
-      dateTime,
-      amount,
-      currency: "840",
-      secret,
-    });
-
-    return crypto
-      .createHash("sha256")
-      .update(storeHash, "utf8")
-      .digest("hex")
-      .toLowerCase();
+    const buf = Buffer.from(storeHash, "ascii").toString("hex");
+    return crypto.createHash("sha256").update(buf).digest("hex").toLowerCase();
   };
 
   const initialFormState: FormData = {
