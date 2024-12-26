@@ -23,7 +23,8 @@ export default function Home() {
   // Helper to format the current date-time in required format
   const getCurrentDateTime = () => {
     const now = new Date();
-    return now.toISOString().slice(0, 19).replace("T", " "); // Example: 2024-01-01 00:00:00
+    // Ensure UTC time is used
+    return now.toISOString().slice(0, 19).replace("T", " ");
   };
 
   // Function to generate the SHA-256 hash
@@ -33,7 +34,15 @@ export default function Home() {
     amount: string,
     secret: string
   ) => {
-    const storeHash = storeId + dateTime + amount + "840" + secret; // Currency code is hardcoded as "840"
+    // Make sure values are trimmed and formatted correctly
+    const cleanStoreId = storeId.trim();
+    const cleanDateTime = dateTime.trim();
+    const cleanAmount = amount.trim();
+
+    // Ensure exact string concatenation (no spaces)
+    const storeHash =
+      cleanStoreId + cleanDateTime + cleanAmount + "840" + secret;
+    console.log("Hash string:", storeHash); // For debugging
     return crypto.createHash("sha256").update(storeHash).digest("hex");
   };
 
