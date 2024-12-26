@@ -2,6 +2,24 @@
 import { useState, useEffect } from "react";
 import crypto from "crypto";
 
+// First, define the type for the form data
+type FormData = {
+  chargetotal: string;
+  hash_algorithm: string;
+  responseFailURL: string;
+  responseSuccessURL: string;
+  storename: string;
+  timezone: string;
+  txndatetime: string;
+  txntype: string;
+  mode: string;
+  oid: string;
+  authenticateTransaction: string;
+  assignToken: string;
+  checkoutoption: string;
+  currency: string;
+};
+
 export default function Home() {
   const fieldLabels: { [key: string]: string } = {
     chargetotal: "Charge Total",
@@ -53,18 +71,19 @@ export default function Home() {
       secret,
     });
 
-    // Convert to hex buffer first (crucial step)
-    const hexString = Buffer.from(storeHash, "ascii").toString("hex");
-    console.log("Hex string:", hexString);
-
-    // Create final hash
-    const hash = crypto.createHash("sha256").update(hexString).digest("hex");
-
-    console.log("Final hash:", hash);
-    return hash;
+    return crypto
+      .createHash("sha256")
+      .update(storeHash, "utf8")
+      .digest("hex")
+      .toLowerCase();
   };
 
-  const initialFormState = {
+  // Generate a simple order ID instead of using UUID
+  const generateOrderId = () => {
+    return `order-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  };
+
+  const initialFormState: FormData = {
     chargetotal: "1.00",
     hash_algorithm: "SHA256",
     responseFailURL: "https://fiserv-payment-playground.vercel.app/fail",
@@ -74,7 +93,7 @@ export default function Home() {
     txndatetime: getCurrentDateTime(),
     txntype: "sale",
     mode: "payonly",
-    oid: crypto.randomUUID() as string,
+    oid: generateOrderId(),
     authenticateTransaction: "true",
     assignToken: "true",
     checkoutoption: "combinedpage",
@@ -100,15 +119,20 @@ export default function Home() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
+    // Type guard to ensure name is a valid key of FormData
+    if (!Object.keys(formData).includes(name)) return;
+
     const newFormData = { ...formData };
 
     // Validate chargetotal (only numeric + decimal values)
     if (name === "chargetotal") {
       const regex = /^\d*\.?\d{0,2}$/;
-      if (!regex.test(value)) return; // Prevent invalid inputs
+      if (!regex.test(value)) return;
     }
 
-    newFormData[name as keyof typeof formData] = value;
+    // Now TypeScript knows this is safe
+    newFormData[name as keyof FormData] = value;
 
     // Update form data and regenerate hash
     setFormData(newFormData);
@@ -120,23 +144,6 @@ export default function Home() {
       secretKey
     );
     setCurrentHash(newHash);
-  };
-
-  const handleClear = () => {
-    const resetForm = {
-      ...initialFormState,
-      txndatetime: getCurrentDateTime(),
-    };
-    setFormData(resetForm);
-
-    // Regenerate hash for reset data
-    const resetHash = generateHash(
-      resetForm.storename,
-      resetForm.txndatetime,
-      resetForm.chargetotal,
-      secretKey
-    );
-    setCurrentHash(resetHash);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -221,13 +228,6 @@ export default function Home() {
                 className="bg-emerald-500 px-4 py-2 rounded text-white"
               >
                 Simulate Submission
-              </button>
-              <button
-                type="button"
-                onClick={handleClear}
-                className="bg-slate-700 px-4 py-2 rounded text-white"
-              >
-                Clear Form
               </button>
             </div>
           </form>
