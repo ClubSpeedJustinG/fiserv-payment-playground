@@ -16,18 +16,23 @@ export default function Home() {
     txntype: "Transaction Type",
   };
 
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    return now.toISOString().slice(0, 19); // Format: YYYY-MM-DDTHH:mm:ss
+  };
+
   const initialFormState = {
-    chargetotal: "",
+    chargetotal: "1.00",
     currency: "",
     hash_algorithm: "",
     hashExtended: "",
     language: "",
-    responseFailURL: "",
-    responseSuccessURL: "",
+    responseFailURL: "https://fiserv-payment-playground.vercel.app/fail",
+    responseSuccessURL: "https://fiserv-payment-playground.vercel.app/success",
     storename: "",
-    timezone: "",
-    txndatetime: "",
-    txntype: "",
+    timezone: "Europe/London",
+    txndatetime: getCurrentDateTime(),
+    txntype: "sale",
   };
 
   const [formData, setFormData] = useState(initialFormState);
