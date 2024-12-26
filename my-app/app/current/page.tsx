@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import crypto from "crypto";
 
 // First, define the type for the form data
 type FormData = {
@@ -42,10 +43,10 @@ export default function Home() {
     responseSuccessURL: "https://fiserv-payment-playground.vercel.app/success",
     storename: 67984769291886,
     timezone: "Europe/London",
-    txndatetime: getCurrentDateTime(),
+    txndatetime: "2024:12:26-19:29:20",
     txntype: "sale",
     mode: "payonly",
-    oid: 1234,
+    oid: 32,
     authenticateTransaction: "true",
     assignToken: "true",
     checkoutoption: "combinedpage",
@@ -54,8 +55,21 @@ export default function Home() {
 
   const [formData, setFormData] = useState(initialFormState);
 
-  // Secret key (kept securely within the code for simulation)
-  //const secretKey = "k8>'QRb9gV";
+  // Add this function to generate hash
+  const generateHash = (data: FormData) => {
+    let storeHash = "";
+
+    // Concatenate in exact order
+    storeHash += data.storename;
+    storeHash += data.txndatetime;
+    storeHash += data.chargetotal;
+    storeHash += data.currency;
+    storeHash += "k8>'QRb9gV"; // Secret key
+
+    // Convert to hex and create SHA-256 hash
+    const buf = Buffer.from(storeHash, "ascii").toString("hex");
+    return crypto.createHash("sha256").update(buf).digest("hex");
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -87,6 +101,8 @@ export default function Home() {
     }
 
     // Update form data and regenerate hash
+    newFormData.txndatetime = getCurrentDateTime(); // Update timestamp
+    newFormData.hash = generateHash(newFormData); // Generate new hash
     setFormData(newFormData);
   };
 
@@ -134,6 +150,14 @@ export default function Home() {
     form.submit();
     document.body.removeChild(form);
   };
+
+  // Set initial hash when component mounts
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      hash: generateHash(prev),
+    }));
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white p-8">
