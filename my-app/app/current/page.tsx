@@ -31,16 +31,11 @@ export default function Home() {
     amount: string,
     secret: string
   ) => {
-    let storeHash = "";
+    // Concatenate values directly without converting to hex first
+    const storeHash = storeId + dateTime + amount + "840" + secret;
 
-    storeHash += storeId;
-    storeHash += dateTime;
-    storeHash += amount;
-    storeHash += "840"; // Currency code
-    storeHash += secret;
-
-    const buf = Buffer.from(storeHash, "ascii").toString("hex");
-    return crypto.createHash("sha256").update(buf).digest("hex");
+    // Create hash from the raw string
+    return crypto.createHash("sha256").update(storeHash).digest("hex");
   };
 
   const initialFormState = {
