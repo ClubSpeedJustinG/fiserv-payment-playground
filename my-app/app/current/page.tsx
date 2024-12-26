@@ -78,11 +78,6 @@ export default function Home() {
       .toLowerCase();
   };
 
-  // Generate a simple order ID instead of using UUID
-  const generateOrderId = () => {
-    return `order-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-  };
-
   const initialFormState: FormData = {
     chargetotal: "1.00",
     hash_algorithm: "SHA256",
@@ -93,7 +88,7 @@ export default function Home() {
     txndatetime: getCurrentDateTime(),
     txntype: "sale",
     mode: "payonly",
-    oid: generateOrderId(),
+    oid: "1234",
     authenticateTransaction: "true",
     assignToken: "true",
     checkoutoption: "combinedpage",
