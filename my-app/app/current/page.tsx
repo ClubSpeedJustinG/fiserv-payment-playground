@@ -80,7 +80,7 @@ export default function Home() {
     timezone: ["Europe/London"],
     txntype: ["sale"],
     mode: ["payonly"],
-    authenticateTransaction: ["true", "false"],
+    authenticateTransaction: ["true"],
     assignToken: ["true"],
     checkoutoption: ["combinedpage"],
     hash_algorithm: ["SHA256"],

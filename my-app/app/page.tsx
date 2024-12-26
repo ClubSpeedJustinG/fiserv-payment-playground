@@ -53,8 +53,9 @@ export default function Home() {
 
           {/* New Card */}
           <div
-            className="bg-slate-800/30 rounded-2xl p-8 border border-slate-700 shadow-xl cursor-not-allowed
-                     opacity-50"
+            onClick={() => router.push("/new")}
+            className="bg-slate-800/30 rounded-2xl p-8 border border-slate-700 shadow-xl cursor-pointer
+                     hover:bg-slate-800/50 transition-all duration-200"
           >
             <div className="flex items-center gap-4 mb-4">
               <div className="p-3 bg-slate-800 rounded-lg">
