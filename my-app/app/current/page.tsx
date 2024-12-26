@@ -69,7 +69,7 @@ export default function Home() {
     e.preventDefault();
     const form = document.createElement("form");
     form.method = "post";
-    form.action = "https://test.ipg-online.com/connect/gateway/processing";
+    form.action = "https://www3.ipg-online.com/connect/gateway/processing";
     form.target = "_blank";
 
     Object.entries(formData).forEach(([key, value]) => {
@@ -224,7 +224,7 @@ export default function Home() {
             </h2>
           </div>
           <pre className="font-mono text-sm text-slate-300 overflow-auto">
-            {`<form method="post" action="https://test.ipg-online.com/connect/gateway/processing" target="_blank">
+            {`<form method="post" action="https://www3.ipg-online.com/connect/gateway/processing" target="_blank">
   <input type="text" name="chargetotal" value="${formData.chargetotal}" readonly />
   <input type="hidden" name="hash_algorithm" value="${formData.hash_algorithm}" readonly />
   <input type="hidden" name="responseFailURL" value="${formData.responseFailURL}" readonly />
