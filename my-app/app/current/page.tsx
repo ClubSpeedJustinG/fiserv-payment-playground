@@ -21,6 +21,88 @@ type FormData = {
   currency: number;
 };
 
+function HashDocumentation() {
+  return (
+    <div className="mt-8 p-6 bg-slate-900/50 rounded-lg border border-slate-700">
+      <h3 className="text-xl font-semibold mb-4 text-emerald-400">
+        Hash Generation Documentation
+      </h3>
+
+      <div className="space-y-6">
+        <div>
+          <h4 className="text-lg font-medium mb-2 text-slate-200">Overview</h4>
+          <p className="text-slate-400">
+            The hash is generated using SHA-256 to create a secure signature for
+            the transaction. All values are concatenated in a specific order
+            before hashing.
+          </p>
+        </div>
+
+        <div>
+          <h4 className="text-lg font-medium mb-2 text-slate-200">
+            Input Values Order
+          </h4>
+          <ol className="list-decimal list-inside space-y-2 text-slate-400">
+            <li>Store ID (storename)</li>
+            <li>Timestamp (yyyy:mm:dd-HH:MM:ss format)</li>
+            <li>Amount (chargetotal)</li>
+            <li>Currency Code</li>
+            <li>Secret Key ()</li>
+          </ol>
+        </div>
+
+        <div>
+          <h4 className="text-lg font-medium mb-2 text-slate-200">Process</h4>
+          <div className="space-y-3">
+            <div className="bg-slate-800/50 p-4 rounded">
+              <p className="text-sm font-medium text-emerald-400 mb-2">
+                1. Concatenation
+              </p>
+              <code className="text-sm text-slate-300">
+                storeHash = storeId + timestamp + amount + currencyCode + secret
+              </code>
+            </div>
+
+            <div className="bg-slate-800/50 p-4 rounded">
+              <p className="text-sm font-medium text-emerald-400 mb-2">
+                2. ASCII to Hex Conversion
+              </p>
+              <code className="text-sm text-slate-300">
+                buf = Buffer.from(storeHash,
+                &rdquo;ascii&rdquo;).toString(&rdquo;hex&rdquo;)
+              </code>
+            </div>
+
+            <div className="bg-slate-800/50 p-4 rounded">
+              <p className="text-sm font-medium text-emerald-400 mb-2">
+                3. SHA-256 Hash
+              </p>
+              <code className="text-sm text-slate-300">
+                hash =
+                crypto.createHash(&rdquo;sha256&rdquo;).update(buf).digest(&rdquo;hex&rdquo;)
+              </code>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-lg font-medium mb-2 text-slate-200">Example</h4>
+          <div className="bg-slate-800/50 p-4 rounded">
+            <p className="text-sm text-slate-400 mb-2">For inputs:</p>
+            <pre className="text-sm text-slate-300">
+              {`storeId: 67984769291886
+timestamp: 2024:03:15-14:30:00
+amount: 25
+currencyCode: 840
+secret: k8>'QRb9gV`}
+            </pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   // Helper to format the current date-time in required format
   const getCurrentDateTime = () => {
@@ -356,15 +438,16 @@ export default function Home() {
                 />
               </div>
             </div>
-            <div>
+            <div className="mt-6">
               <label className="block text-sm text-slate-400 mb-2">Hash</label>
               <input
                 type="text"
                 name="hash"
                 value={formData.hash}
                 disabled
-                className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+                className="w-full bg-slate-900 p-2 rounded border border-slate-700 font-mono"
               />
+              <HashDocumentation />
             </div>
 
             <div className="mt-6 flex gap-4">
