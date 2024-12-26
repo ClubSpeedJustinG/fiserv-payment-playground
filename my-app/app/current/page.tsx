@@ -1,7 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
+import crypto from "crypto";
 
 export default function Home() {
+  const SECRET = "your-secret-key";
+
   const fieldLabels: { [key: string]: string } = {
     chargetotal: "Charge Total",
     hash_algorithm: "Hash Algorithm",
@@ -17,6 +20,19 @@ export default function Home() {
     return "2024-01-01T00:00:00";
   };
 
+  const generateHash = (storeId: string, dateTime: string, amount: string) => {
+    let storeHash = "";
+
+    storeHash += storeId;
+    storeHash += dateTime;
+    storeHash += amount;
+    storeHash += "840"; // Currency code
+    storeHash += SECRET;
+
+    const buf = Buffer.from(storeHash, "ascii").toString("hex");
+    return crypto.createHash("sha256").update(buf).digest("hex");
+  };
+
   const initialFormState = {
     chargetotal: "1.00",
     hash_algorithm: "SHA256",
@@ -26,6 +42,13 @@ export default function Home() {
     timezone: "Europe/London",
     txndatetime: getCurrentDateTime(),
     txntype: "sale",
+    mode: "payonly",
+    oid: "test-order-123",
+    authenticateTransaction: "true",
+    assignToken: "true",
+    checkoutoption: "combinedpage",
+    currency: "840",
+    hash: "",
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -67,12 +90,21 @@ export default function Home() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Generate hash before submission
+    const hash = generateHash(
+      formData.storename,
+      formData.txndatetime,
+      formData.chargetotal
+    );
+
     const form = document.createElement("form");
     form.method = "post";
     form.action = "https://www3.ipg-online.com/connect/gateway/processing";
     form.target = "_blank";
 
-    Object.entries(formData).forEach(([key, value]) => {
+    // Add all form fields including the hash
+    Object.entries({ ...formData, hash }).forEach(([key, value]) => {
       const input = document.createElement("input");
       input.type = key === "chargetotal" ? "text" : "hidden";
       input.name = key;
