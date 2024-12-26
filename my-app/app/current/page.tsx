@@ -23,7 +23,14 @@ export default function Home() {
   // Helper to format the current date-time in required format
   const getCurrentDateTime = () => {
     const now = new Date();
-    return now.toISOString().slice(0, 19).replace("T", "").replace(/[-:]/g, "");
+    // Ensure two digits for all components
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+
+    return `${now.getFullYear()}:${month}:${day}-${hours}:${minutes}:${seconds}`;
   };
 
   // Function to generate the SHA-256 hash
@@ -33,32 +40,28 @@ export default function Home() {
     amount: string,
     secret: string
   ) => {
-    // Ensure proper formatting of amount (always 2 decimal places)
-    const formattedAmount = Number(amount).toFixed(2);
+    // Create the exact string without any manipulation
+    const storeHash = `${storeId}${dateTime}${amount}840${secret}`;
 
-    // Remove any possible whitespace and ensure clean values
-    const cleanStoreId = storeId.replace(/\s/g, "");
-    const cleanDateTime = dateTime.replace(/\s/g, "");
-
-    // Create hash string with no spaces between concatenated values
-    const hashString = `${cleanStoreId}${cleanDateTime}${formattedAmount}840${secret}`;
-
-    // Log the exact string being hashed for debugging
-    console.log("Raw string to hash:", hashString);
-    console.log("String length:", hashString.length);
-    console.log("String components:", {
-      storeId: cleanStoreId,
-      dateTime: cleanDateTime,
-      amount: formattedAmount,
+    // Debug logging
+    console.log({
+      rawString: storeHash,
+      storeId,
+      dateTime,
+      amount,
       currency: "840",
       secret,
     });
 
-    return crypto
-      .createHash("sha256")
-      .update(hashString, "utf8")
-      .digest("hex")
-      .toLowerCase();
+    // Convert to hex buffer first (crucial step)
+    const hexString = Buffer.from(storeHash, "ascii").toString("hex");
+    console.log("Hex string:", hexString);
+
+    // Create final hash
+    const hash = crypto.createHash("sha256").update(hexString).digest("hex");
+
+    console.log("Final hash:", hash);
+    return hash;
   };
 
   const initialFormState = {
@@ -71,7 +74,7 @@ export default function Home() {
     txndatetime: getCurrentDateTime(),
     txntype: "sale",
     mode: "payonly",
-    oid: "test-order-123",
+    oid: crypto.randomUUID() as string,
     authenticateTransaction: "true",
     assignToken: "true",
     checkoutoption: "combinedpage",
