@@ -93,9 +93,8 @@ export default function Home() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Set the hardcoded hash right before submission
-    const submissionHash =
-      "c0ffca17962ee946f16271f1c7d2c9699a4bd11952cf05263d83a90876ea0adf";
+    // Log the form data being sent
+    console.log("Submitting form data:", formData);
 
     // Create a form and simulate submission
     const form = document.createElement("form");
@@ -103,28 +102,33 @@ export default function Home() {
     form.action = "https://www3.ipg-online.com/connect/gateway/processing";
     form.target = "_blank";
 
-    // Add all fields to the form, using the hardcoded hash
-    Object.entries({ ...formData, hash: submissionHash }).forEach(
-      ([key, value]) => {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = key;
+    const formDataToSend = { ...formData };
 
-        // Convert value based on field type
-        switch (key) {
-          case "chargetotal":
-          case "storename":
-          case "oid":
-          case "currency":
-            input.value = String(value); // Convert number to string but maintain numeric type
-            break;
-          default:
-            input.value = String(value);
-        }
+    // Log the actual data being added to form
+    console.log("Data being sent to payment gateway:", formDataToSend);
 
-        form.appendChild(input);
+    // Add all fields to the form
+    Object.entries(formDataToSend).forEach(([key, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = key;
+
+      // Convert value based on field type
+      switch (key) {
+        case "chargetotal":
+        case "storename":
+        case "oid":
+        case "currency":
+          input.value = String(value);
+          break;
+        default:
+          input.value = String(value);
       }
-    );
+
+      form.appendChild(input);
+      // Log each field being added
+      console.log(`Adding field: ${key} = ${input.value}`);
+    });
 
     document.body.appendChild(form);
     form.submit();
