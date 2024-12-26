@@ -23,8 +23,7 @@ export default function Home() {
   // Helper to format the current date-time in required format
   const getCurrentDateTime = () => {
     const now = new Date();
-    // Ensure UTC time is used
-    return now.toISOString().slice(0, 19).replace("T", " ");
+    return now.toISOString().slice(0, 19).replace("T", "").replace(/[-:]/g, "");
   };
 
   // Function to generate the SHA-256 hash
@@ -34,16 +33,32 @@ export default function Home() {
     amount: string,
     secret: string
   ) => {
-    // Make sure values are trimmed and formatted correctly
-    const cleanStoreId = storeId.trim();
-    const cleanDateTime = dateTime.trim();
-    const cleanAmount = amount.trim();
+    // Ensure proper formatting of amount (always 2 decimal places)
+    const formattedAmount = Number(amount).toFixed(2);
 
-    // Ensure exact string concatenation (no spaces)
-    const storeHash =
-      cleanStoreId + cleanDateTime + cleanAmount + "840" + secret;
-    console.log("Hash string:", storeHash); // For debugging
-    return crypto.createHash("sha256").update(storeHash).digest("hex");
+    // Remove any possible whitespace and ensure clean values
+    const cleanStoreId = storeId.replace(/\s/g, "");
+    const cleanDateTime = dateTime.replace(/\s/g, "");
+
+    // Create hash string with no spaces between concatenated values
+    const hashString = `${cleanStoreId}${cleanDateTime}${formattedAmount}840${secret}`;
+
+    // Log the exact string being hashed for debugging
+    console.log("Raw string to hash:", hashString);
+    console.log("String length:", hashString.length);
+    console.log("String components:", {
+      storeId: cleanStoreId,
+      dateTime: cleanDateTime,
+      amount: formattedAmount,
+      currency: "840",
+      secret,
+    });
+
+    return crypto
+      .createHash("sha256")
+      .update(hashString, "utf8")
+      .digest("hex")
+      .toLowerCase();
   };
 
   const initialFormState = {
