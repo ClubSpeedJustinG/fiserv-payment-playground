@@ -4,40 +4,23 @@ import crypto from "crypto";
 
 // First, define the type for the form data
 type FormData = {
-  chargetotal: string;
+  chargetotal: number;
   hash_algorithm: string;
   responseFailURL: string;
   responseSuccessURL: string;
-  storename: string;
+  storename: number;
   timezone: string;
   txndatetime: string;
   txntype: string;
   mode: string;
-  oid: string;
+  oid: number;
   authenticateTransaction: string;
   assignToken: string;
   checkoutoption: string;
-  currency: string;
+  currency: number;
 };
 
 export default function Home() {
-  const fieldLabels: { [key: string]: string } = {
-    chargetotal: "Charge Total",
-    hash_algorithm: "Hash Algorithm",
-    responseFailURL: "Response Fail URL",
-    responseSuccessURL: "Response Success URL",
-    storename: "Store Name",
-    timezone: "Timezone",
-    txndatetime: "Transaction Date Time",
-    txntype: "Transaction Type",
-    mode: "Mode",
-    oid: "Order ID",
-    authenticateTransaction: "Authenticate Transaction",
-    assignToken: "Assign Token",
-    checkoutoption: "Checkout Option",
-    currency: "Currency",
-  };
-
   // Helper to format the current date-time in required format
   const getCurrentDateTime = () => {
     const now = new Date();
@@ -70,20 +53,20 @@ export default function Home() {
   };
 
   const initialFormState: FormData = {
-    chargetotal: "1.00",
+    chargetotal: 1.0,
     hash_algorithm: "SHA256",
     responseFailURL: "https://fiserv-payment-playground.vercel.app/fail",
     responseSuccessURL: "https://fiserv-payment-playground.vercel.app/success",
-    storename: "67984769291886",
+    storename: 67984769291886,
     timezone: "Europe/London",
     txndatetime: getCurrentDateTime(),
     txntype: "sale",
     mode: "payonly",
-    oid: "1234",
+    oid: 1234,
     authenticateTransaction: "true",
     assignToken: "true",
     checkoutoption: "combinedpage",
-    currency: "840",
+    currency: 840,
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -95,9 +78,9 @@ export default function Home() {
   useEffect(() => {
     // Generate hash on mount with initial form data
     const initialHash = generateHash(
-      formData.storename,
+      String(formData.storename),
       formData.txndatetime,
-      formData.chargetotal,
+      String(formData.chargetotal),
       secretKey
     );
     setCurrentHash(initialHash);
@@ -111,22 +94,34 @@ export default function Home() {
 
     const newFormData = { ...formData };
 
-    // Validate chargetotal (only numeric + decimal values)
-    if (name === "chargetotal") {
-      const regex = /^\d*\.?\d{0,2}$/;
-      if (!regex.test(value)) return;
-    }
+    // Handle different field types
+    switch (name) {
+      case "chargetotal":
+        const regex = /^\d*\.?\d{0,2}$/;
+        if (!regex.test(value)) return;
+        newFormData[name] = parseFloat(value) || 0;
+        break;
 
-    // Now TypeScript knows this is safe
-    newFormData[name as keyof FormData] = value;
+      case "storename":
+      case "oid":
+      case "currency":
+        // Only allow numeric input for these fields
+        if (!/^\d*$/.test(value)) return;
+        newFormData[name] = parseInt(value) || 0;
+        break;
+
+      default:
+        // For string fields, directly assign the value
+        (newFormData[name as keyof FormData] as string) = value;
+    }
 
     // Update form data and regenerate hash
     setFormData(newFormData);
 
     const newHash = generateHash(
-      newFormData.storename,
+      String(newFormData.storename),
       newFormData.txndatetime,
-      newFormData.chargetotal,
+      String(newFormData.chargetotal),
       secretKey
     );
     setCurrentHash(newHash);
@@ -147,7 +142,19 @@ export default function Home() {
         const input = document.createElement("input");
         input.type = "hidden";
         input.name = key;
-        input.value = value;
+
+        // Convert value based on field type
+        switch (key) {
+          case "chargetotal":
+          case "storename":
+          case "oid":
+          case "currency":
+            input.value = String(value); // Convert number to string but maintain numeric type
+            break;
+          default:
+            input.value = String(value);
+        }
+
         form.appendChild(input);
       }
     );
@@ -189,21 +196,190 @@ export default function Home() {
 
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {Object.entries(fieldLabels).map(([key, label]) => (
-                <div key={key}>
-                  <label className="block text-sm text-slate-400 mb-2">
-                    {label}
-                  </label>
-                  <input
-                    type="text"
-                    name={key}
-                    value={formData[key as keyof typeof formData] || ""}
-                    onChange={handleChange}
-                    className="w-full bg-slate-900 p-2 rounded border border-slate-700"
-                    disabled={key === "hash_algorithm"}
-                  />
-                </div>
-              ))}
+              {/* Numeric Inputs */}
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Charge Total
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  name="chargetotal"
+                  value={formData.chargetotal}
+                  onChange={handleChange}
+                  className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Store Name
+                </label>
+                <input
+                  type="number"
+                  name="storename"
+                  value={formData.storename}
+                  onChange={handleChange}
+                  className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Order ID
+                </label>
+                <input
+                  type="number"
+                  name="oid"
+                  value={formData.oid}
+                  onChange={handleChange}
+                  className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Currency
+                </label>
+                <input
+                  type="number"
+                  name="currency"
+                  value={formData.currency}
+                  onChange={handleChange}
+                  className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+                />
+              </div>
+
+              {/* String Inputs */}
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Hash Algorithm
+                </label>
+                <input
+                  type="text"
+                  name="hash_algorithm"
+                  value={formData.hash_algorithm}
+                  disabled
+                  className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Response Fail URL
+                </label>
+                <input
+                  type="text"
+                  name="responseFailURL"
+                  value={formData.responseFailURL}
+                  onChange={handleChange}
+                  className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Response Success URL
+                </label>
+                <input
+                  type="text"
+                  name="responseSuccessURL"
+                  value={formData.responseSuccessURL}
+                  onChange={handleChange}
+                  className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Timezone
+                </label>
+                <input
+                  type="text"
+                  name="timezone"
+                  value={formData.timezone}
+                  onChange={handleChange}
+                  className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Transaction Date Time
+                </label>
+                <input
+                  type="text"
+                  name="txndatetime"
+                  value={formData.txndatetime}
+                  onChange={handleChange}
+                  className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Transaction Type
+                </label>
+                <input
+                  type="text"
+                  name="txntype"
+                  value={formData.txntype}
+                  onChange={handleChange}
+                  className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Mode
+                </label>
+                <input
+                  type="text"
+                  name="mode"
+                  value={formData.mode}
+                  onChange={handleChange}
+                  className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Authenticate Transaction
+                </label>
+                <input
+                  type="text"
+                  name="authenticateTransaction"
+                  value={formData.authenticateTransaction}
+                  onChange={handleChange}
+                  className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Assign Token
+                </label>
+                <input
+                  type="text"
+                  name="assignToken"
+                  value={formData.assignToken}
+                  onChange={handleChange}
+                  className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Checkout Option
+                </label>
+                <input
+                  type="text"
+                  name="checkoutoption"
+                  value={formData.checkoutoption}
+                  onChange={handleChange}
+                  className="w-full bg-slate-900 p-2 rounded border border-slate-700"
+                />
+              </div>
             </div>
 
             {hashInfoBox}
